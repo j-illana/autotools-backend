@@ -1,15 +1,7 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import type { Product } from '../models/product.model.js';
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 export async function sendLowStockAlert(product: Product, recipientEmails: string[]): Promise<void> {
   if (recipientEmails.length === 0) return;
@@ -29,8 +21,8 @@ export async function sendLowStockAlert(product: Product, recipientEmails: strin
 
   await Promise.all(
     recipientEmails.map(email =>
-      transporter.sendMail({
-        from: `"AutoTools Inventario" <${process.env.EMAIL_USER}>`,
+      sgMail.send({
+        from: process.env.EMAIL_USER!,
         to: email,
         subject: `⚠️ Stock bajo: ${product.name}`,
         html,
