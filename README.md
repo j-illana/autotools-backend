@@ -10,7 +10,7 @@ API REST para la gestión interna de una distribuidora de autopartes. Maneja aut
 - **mysql2** — driver con soporte de promesas y pool de conexiones
 - **jsonwebtoken** — autenticación con JWT
 - **bcryptjs** — hash de contraseñas
-- **nodemailer** — envío de alertas por email vía Gmail SMTP
+- **@sendgrid/mail** — envío de alertas por email vía SendGrid HTTP API
 
 ## Requisitos previos
 
@@ -82,39 +82,29 @@ DB_NAME=autotools
 JWT_SECRET=tu_secret_aqui
 JWT_EXPIRES_IN=8h
 
-# Email (Gmail SMTP)
-EMAIL_USER=tu_cuenta@gmail.com
-EMAIL_PASS=tu_app_password
+# Email (SendGrid)
+SENDGRID_API_KEY=tu_api_key_de_sendgrid
 
 # Frontend (para CORS)
 FRONTEND_URL=http://localhost:5173
 ```
 
-## Configurar alertas de email (Gmail App Password)
+## Configurar alertas de email (SendGrid)
 
-Las alertas de stock bajo se envían por email usando Gmail SMTP. Para que funcionen se necesita un **App Password** de Google — no es la contraseña normal de Gmail.
+Las alertas de stock bajo se envían vía **SendGrid HTTP API**. No se usa SMTP — no se necesita cuenta de Gmail ni App Password.
 
 ### Pasos
 
-1. **Activar verificación en 2 pasos** en la cuenta de Google:
-   - Entra a [myaccount.google.com](https://myaccount.google.com) → Security → 2-Step Verification
-   - Sigue los pasos para activarla (requiere número de teléfono)
-
-2. **Generar el App Password**:
-   - Entra a [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
-   - En "App name" escribe `AutoTools`
-   - Haz clic en **Create**
-   - Google muestra un código de **16 caracteres** (ej: `abcd efgh ijkl mnop`)
-
-3. **Pegarlo en el `.env`** sin espacios:
+1. Crear una cuenta gratuita en [sendgrid.com](https://sendgrid.com)
+2. Ir a **Settings → API Keys → Create API Key**
+3. Elegir permisos **Restricted** → activar solo **Mail Send**
+4. Copiar la key generada y pegarla en el `.env`:
    ```env
-   EMAIL_USER=tu_cuenta@gmail.com
-   EMAIL_PASS=abcdefghijklmnop
+   SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxx
    ```
+5. Reiniciar el servidor
 
-4. **Reinicia el servidor** — nodemailer carga las credenciales al arrancar, no en caliente.
-
-> **Importante:** El App Password solo se muestra una vez. Si se pierde, genera uno nuevo desde el mismo link y actualiza el `.env`.
+> **Nota:** El plan gratuito de SendGrid permite hasta 100 emails/día. Es suficiente para desarrollo y pruebas.
 
 ### ¿Cuándo se envían las alertas?
 
@@ -143,7 +133,7 @@ src/
 │   ├── seed-products.ts       # Crea tabla products y carga 20 productos
 │   └── seed-users.ts          # Crea tabla users y carga usuarios de prueba
 ├── services/
-│   └── email.service.ts       # Nodemailer — sendLowStockAlert
+│   └── email.service.ts       # SendGrid — sendLowStockAlert
 └── index.ts                   # Entry point, registro de rutas
 ```
 
